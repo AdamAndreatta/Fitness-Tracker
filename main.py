@@ -9,7 +9,7 @@ print("Welcome to fitness Tracker!\n\nWelcome to fitness tracker your one stop s
 
 next = input("press 1 to continue to the main menu\n")
 os.system('cls')
-tracker_saved = False
+
 
 if os.path.isfile('./Tracker.json'):
     f = open('Tracker.json')
@@ -18,6 +18,8 @@ if os.path.isfile('./Tracker.json'):
 else:
     trackList = dict()
 
+global tracker_saved
+tracker_saved = False
     
 while True:
     print("======Main Menu======\n")
@@ -102,6 +104,23 @@ while True:
                     for value in trackList[key]:
                         print(f"{value}")
 
+            elif selection == "3":
+                subprocess.Popen([sys.executable, 'csv_service.py'])
+
+                csv_context = zmq.Context()
+                csv_req = csv_context.socket(zmq.REQ)
+                csv_req.connect('tcp://localhost:5555')
+
+                csv_req.send_string("convert")
+                print("Please wait while your file is converted!")
+                time.sleep(5)
+
+                message = csv_req.recv_string()
+                csv_req.close()
+                csv_context.term()
+                print(message)
+
+
             elif selection == "4":
                 name = input("Please enter the name of the item you wish to edit.\n")
                 edited = input("Please select what you would like to edit.\n1. Calories\n2. quantity\n")
@@ -133,10 +152,14 @@ while True:
                 print(f"{name}\n{calories}\n{quantity}")
 
             elif selection == "7":
+                global tracker_saved
+                tracker_saved = True
+
                 list = json.dumps(trackList)
                 f = open("Tracker.json", "w")
                 f.write(list)
                 f.close()
+
                 print("Your table has been saved!")
 
             elif selection == "8":
@@ -146,24 +169,29 @@ while True:
     def workoutGenerator():
         print("======Workout Generator======")
         print("Please select an option to create a workout for your unique situation! This tool makes for a great way to change up\nyour workout plan when youre not sure what you're feeling!\n")
-        print("1. Generate a full workout\n2. Generate for 1 body part\n3. Save Workout\n5. Return to main menu\n")
+        print("1. Generate a full workout\n2. Save Workout\n5. Return to main menu\n")
 
         option = input("Please select an option listed below\n")
+
         if option == "1":
             os.system('cls')
-
-            f = open("Workout.txt", "w")
-            f.write("full")
-            f.close()
-
-        elif option == "2":
+            subprocess.Popen([sys.executable, 'workout_selector.py'])
+            time.sleep(1)
             os.system('cls')
 
-            bodyPart = input("Please select which body part you would like a workout generated for. (Arms, Legs, Back, Chest)\n")
+            print('Starting test.')
+            with open('selected_workouts.txt', 'w') as outfile:
+                outfile.write('start')
+            time.sleep(2)
 
-            f = open("Workout.txt", "w")
-            f.write(f"single:{bodyPart}")
-            f.close()
+            with open('selected_workouts.txt', 'r') as readfile:
+                print(readfile.read())
+
+            with open('selected_workouts.txt', 'w') as outfile:
+                outfile.write('stop')
+            time.sleep(8)
+
+            sys.exit(0)
 
         elif option == "3":
             os.system('cls')
@@ -173,6 +201,7 @@ while True:
         elif option == "5":
             os.system('cls')
             return
+
     def calorieCalculator():
         print("Compare your goal with your total calories you've logged.\n")
         calorie_goal = input("Please set your goal for comparison\n")
@@ -213,16 +242,16 @@ while True:
         os.system('cls')
 
         if tracker_saved is False:
-            response = input("Your current tracker is not save if you choose to exit the session it will be deleted.\n Are you sure you wish to exit? Press 1. exit wihtout saving\n 2. save and exit\n")
+            response = input("Your current tracker is not save if you choose to exit the session it will be deleted.Are you sure you wish to exit?\n1. exit wihtout saving\n2. save and exit\n")
 
             if response == "1":
                 break
 
             if response == "2":
-                f = open("Tracker.txt", "w")
-                for key in trackList:
-                    for item in trackList[key]:
-                        save = f"{key}: {item}\n"
-                        f.write(save)
+                f = open("Tracker.json")
+                file = json.dumps(trackList)
+                f.write(file)
                 f.close()
                 break
+        else:
+            break
