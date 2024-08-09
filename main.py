@@ -1,38 +1,77 @@
-import argparse
 import os
+import sys
+import subprocess
 import time
+import zmq
+import json
 
 print("Welcome to fitness Tracker!\n\nWelcome to fitness tracker your one stop shop for all your fitness needs here,\nyou will generate workouts track your dietary consumption and convert from various weights kg -> lbs\n")
 
 next = input("press 1 to continue to the main menu\n")
 os.system('cls')
-trackList = dict()
-
 tracker_saved = False
 
+if os.path.isfile('./Tracker.json'):
+    f = open('Tracker.json')
+    trackList = json.load(f)
+    f.close()
+else:
+    trackList = dict()
+
+    
 while True:
     print("======Main Menu======\n")
     print("Welcome! below are the solutions for all your needs fitness.\nJump around and enjoy the features and create\nand track all your fitness needs.\n")
-    feature = input("1. Convert weight value\n2. Dietary Tracker\n3. Create a workout\n5. Exit Program\n")
+    feature = input("1. Convert weight value\n2. Dietary Tracker\n3. Create a workout\n4. Calorie Counter\n5. Exit Program\n")
 
     def weightConverter():
         while True:
+            subprocess.Popen([sys.executable, 'converter.py'])
+
             print("======Weight Converter======")
             conversion = input("Welcome to weight Conversion!\nPlease select your conversion of choice!\n1. kg to lbs\n2. lbs to kgs\n3. return to main menu\n")
 
             if conversion == "1":
+                convert_context = zmq.Context()
+                convert_req = convert_context.socket(zmq.REQ)
+                convert_req.connect('tcp://localhost:5555')
+
                 kgs = input("Please enter the amount you would like to convert.\n")
 
-                f = open("conversion.txt", "w")
-                f.write(f"pounds:{kgs}")
-                f.close()
+                type = {"kgs": int(kgs)}
+                message = json.dumps(type)
+
+                convert_req.send_string(message)
+                print("converting")
+                time.sleep(10)
+
+                response = convert_req.recv_string()
+                convert_req.close()
+                convert_context.term()
+
+                value = float(response)
+                print(f"Your converted value to kgs is: {value}")
 
             elif conversion == "2":
+                convert_context = zmq.Context()
+                convert_req = convert_context.socket(zmq.REQ)
+                convert_req.connect('tcp://localhost:5555')
+
                 pounds = input("Please enter the amount you would like to convert.\n")
 
-                f = open("conversion.txt", "w")
-                f.write(f"kgs:{pounds}")
-                f.close()
+                type = {"lbs":int(pounds)}
+                message = json.dumps(type)
+
+                convert_req.send_string(message)
+                print("converting")
+                time.sleep(5)
+
+                response = convert_req.recv_string()
+                convert_req.close()
+                convert_context.term()
+
+                value = float(response)
+                print(f"Your converted value to lbs is: {value}")
 
             elif conversion == "3":
                 os.system('cls')
@@ -54,7 +93,7 @@ while True:
                 calories = input("Please enter the calorie amount of the item\n")
                 quantity = input("Please enter the quantity of the item your are adding\n")
 
-                trackList[item] = [f"calories:{calories}", f"quantity:{quantity}"]
+                trackList[item] = [int(calories), int(quantity)]
                 continue
 
             elif selection == "2":
@@ -94,11 +133,9 @@ while True:
                 print(f"{name}\n{calories}\n{quantity}")
 
             elif selection == "7":
-                f = open("Tracker.txt", "w")
-                for key in trackList:
-                    for item in trackList[key]:
-                        save = f"{key}: {item}\n"
-                        f.write(save)
+                list = json.dumps(trackList)
+                f = open("Tracker.json", "w")
+                f.write(list)
                 f.close()
                 print("Your table has been saved!")
 
@@ -136,6 +173,25 @@ while True:
         elif option == "5":
             os.system('cls')
             return
+    def calorieCalculator():
+        print("Compare your goal with your total calories you've logged.\n")
+        calorie_goal = input("Please set your goal for comparison\n")
+
+        subprocess.Popen([sys.executable, 'calculator.py'])
+        cal_context = zmq.Context()
+        cal_req = cal_context.socket(zmq.REQ)
+        cal_req.connect('tcp://localhost:5555')
+
+        print("Now we will grab the total from your list please wait..")
+        cal_req.send_string("add")
+        time.sleep(5)
+
+        total = cal_req.recv_string()
+        print(f"You're total vs your goal is as provided {total}/{calorie_goal}")
+
+        cal_req.close()
+        cal_context.term()
+
 
     if feature == "1":
         os.system('cls')
@@ -148,6 +204,10 @@ while True:
     elif feature == "3":
         os.system('cls')
         workoutGenerator()
+
+    elif feature == "4":
+        os.system('cls')
+        calorieCalculator()
 
     elif feature == "5":
         os.system('cls')
