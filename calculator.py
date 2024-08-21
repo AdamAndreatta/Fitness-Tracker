@@ -20,4 +20,3 @@ if message == "add":
     total = str(calories)
     rep_socket.send_string(total)
 
-

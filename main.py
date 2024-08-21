@@ -10,14 +10,6 @@ print("Welcome to fitness Tracker!\n\nWelcome to fitness tracker your one stop s
 next = input("press 1 to continue to the main menu\n")
 os.system('cls')
 
-
-if os.path.isfile('./Tracker.json'):
-    f = open('Tracker.json')
-    trackList = json.load(f)
-    f.close()
-else:
-    trackList = dict()
-
 global tracker_saved
 tracker_saved = False
     
@@ -28,7 +20,7 @@ while True:
 
     def weightConverter():
         while True:
-            subprocess.Popen([sys.executable, 'converter.py'])
+            process1 = subprocess.Popen([sys.executable, 'converter.py'])
 
             print("======Weight Converter======")
             conversion = input("Welcome to weight Conversion!\nPlease select your conversion of choice!\n1. kg to lbs\n2. lbs to kgs\n3. return to main menu\n")
@@ -77,13 +69,20 @@ while True:
 
             elif conversion == "3":
                 os.system('cls')
+                subprocess.Popen.kill(process1)
                 return
 
             else:
                 print("please select an option that is listed below\n")
                 continue
-
     def dietaryTracker():
+        if os.path.isfile('./Tracker.json'):
+            f = open('Tracker.json')
+            trackList = json.load(f)
+            f.close()
+        else:
+            trackList = dict()
+
         while True:
             print("======Dietary Tracker======")
             print("Welcome to dietary tracker the only tool you need to help you get your diet on right.\nBelow you can add, remove, edit, and search all the items you add to your caloric tracker this will help you\nkeep a good tab on what and when you're eating during the week!\n")
@@ -105,7 +104,7 @@ while True:
                         print(f"{value}")
 
             elif selection == "3":
-                subprocess.Popen([sys.executable, 'csv_service.py'])
+                process2 = subprocess.Popen([sys.executable, 'csv_service.py'])
 
                 csv_context = zmq.Context()
                 csv_req = csv_context.socket(zmq.REQ)
@@ -164,49 +163,50 @@ while True:
 
             elif selection == "8":
                 os.system('cls')
+                subprocess.Popen.kill(process2)
                 return
 
     def workoutGenerator():
-        print("======Workout Generator======")
-        print("Please select an option to create a workout for your unique situation! This tool makes for a great way to change up\nyour workout plan when youre not sure what you're feeling!\n")
-        print("1. Generate a full workout\n2. Save Workout\n5. Return to main menu\n")
+        while True:
+            print("======Workout Generator======")
+            print("Please select an option to create a workout for your unique situation! This tool makes for a great way to change up\nyour workout plan when youre not sure what you're feeling!\n")
+            print("1. Generate a full workout\n5. Return to main menu\n")
 
-        option = input("Please select an option listed below\n")
+            option = input("Please select an option listed below\n")
 
-        if option == "1":
-            os.system('cls')
-            subprocess.Popen([sys.executable, 'workout_selector.py'])
-            time.sleep(1)
-            os.system('cls')
+            if option == "1":
+                os.system('cls')
+                process3 = subprocess.Popen([sys.executable, 'workout_selector.py'])
+                time.sleep(1)
+                os.system('cls')
 
-            print('Starting test.')
-            with open('selected_workouts.txt', 'w') as outfile:
-                outfile.write('start')
-            time.sleep(2)
+                print('Generating workout.')
+                with open('selected_workouts.txt', 'w') as outfile:
+                    outfile.write('start')
+                time.sleep(2)
 
-            with open('selected_workouts.txt', 'r') as readfile:
-                print(readfile.read())
+                with open('selected_workouts.txt', 'r') as readfile:
+                    print(readfile.read())
 
-            with open('selected_workouts.txt', 'w') as outfile:
-                outfile.write('stop')
-            time.sleep(8)
+                with open('selected_workouts.txt', 'w') as outfile:
+                    outfile.write('stop')
 
-            sys.exit(0)
+            elif option == "3":
+                os.system('cls')
 
-        elif option == "3":
-            os.system('cls')
+                print("micro service not built for this yet")
 
-            print("micro service not built for this yet")
+            elif option == "5":
+                os.system('cls')
+                subprocess.Popen.kill(process3)
+                return
 
-        elif option == "5":
-            os.system('cls')
-            return
 
     def calorieCalculator():
         print("Compare your goal with your total calories you've logged.\n")
         calorie_goal = input("Please set your goal for comparison\n")
 
-        subprocess.Popen([sys.executable, 'calculator.py'])
+        process4 = subprocess.Popen([sys.executable, 'calculator.py'])
         cal_context = zmq.Context()
         cal_req = cal_context.socket(zmq.REQ)
         cal_req.connect('tcp://localhost:5555')
@@ -220,7 +220,9 @@ while True:
 
         cal_req.close()
         cal_context.term()
-
+        subprocess.Popen.kill(process4)
+        time.sleep(5)
+        return
 
     if feature == "1":
         os.system('cls')
@@ -240,18 +242,4 @@ while True:
 
     elif feature == "5":
         os.system('cls')
-
-        if tracker_saved is False:
-            response = input("Your current tracker is not save if you choose to exit the session it will be deleted.Are you sure you wish to exit?\n1. exit wihtout saving\n2. save and exit\n")
-
-            if response == "1":
-                break
-
-            if response == "2":
-                f = open("Tracker.json")
-                file = json.dumps(trackList)
-                f.write(file)
-                f.close()
-                break
-        else:
-            break
+        break

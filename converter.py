@@ -6,8 +6,8 @@ context = zmq.Context()
 rep_socket = context.socket(zmq.REP)
 rep_socket.bind('tcp://*:5555')
 
-message = rep_socket.recv_string()
-data = json.loads(message)
+message1 = rep_socket.recv_string()
+data = json.loads(message1)
 vals = list(data.values())
 keys = list(data.keys())
 
